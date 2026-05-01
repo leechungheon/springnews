@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>뉴스 게시판</title>
+  <style>
+    /* 기본 스타일 설정 */
+    body {
+      font-family: 'Malgun Gothic', sans-serif;
+      margin: 0;
+      padding: 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .board-container {
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    /* 제목 스타일 */
+    h1 {
+      text-align: center;
+      font-size: 32px;
+      margin-bottom: 50px;
+      font-weight: normal;
+    }
+
+    /* 검색 영역 스타일 */
+    .search-area {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+
+    .search-area input[type="text"] {
+      padding: 8px 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      outline: none;
+      width: 200px;
+    }
+
+    .search-area button {
+      padding: 8px 20px;
+      border: 1px solid #4cd4e0;
+      background-color: white;
+      color: #4cd4e0;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    /* 테이블 스타일 */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #e0e0e0;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    th {
+      background-color: #ffb6c1; /* 이미지의 핑크색 */
+      color: white;
+      padding: 12px;
+      border: 1px solid white;
+      font-weight: bold;
+    }
+
+    td {
+      padding: 15px;
+      border: 1px solid #e0e0e0;
+      color: #333;
+    }
+
+    /* 데이터 없음 행 스타일 */
+    .empty-row td {
+      padding: 30px;
+      font-weight: bold;
+      color: #000;
+    }
+
+    /* 뉴스 제목 링크 스타일 */
+    .title-link {
+      text-decoration: none;
+      color: #333;
+    }
+
+    .title-link:hover {
+      text-decoration: underline;
+    }
+
+    /* 하단 버튼 영역 스타일 */
+    .btn-area {
+      text-align: center;
+    }
+
+    .btn-write {
+      padding: 10px 30px;
+      border: 2px solid #4cd4e0; /* 이미지의 하늘색 테두리 */
+      background-color: white;
+      color: #4cd4e0;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const btnShowForm = document.getElementById('btn-show-form'); // '뉴스 작성' 버튼
+    const formContainer = document.getElementById('write-form-container'); // 입력폼
+    const btnCancel = document.getElementById('btn-cancel'); // 입력폼-취소 버튼
+    const newsForm = document.getElementById('news-form'); // 뉴스작성 폼
+
+    // 1. '뉴스 작성' 버튼 클릭 시
+    btnShowForm.addEventListener('click', function() {
+      formContainer.style.display = 'block';
+      btnShowForm.style.display = 'none';
+    });
+
+    // 2. '취소' 버튼 클릭 시
+    btnCancel.addEventListener('click', function() {
+      formContainer.style.display = 'none';
+      newsForm.reset();
+      btnShowForm.style.display = 'inline-block';
+    });
+  });
+</script>
+<body>
+
+<div class="board-container">
+  <h1>뉴스 게시판</h1>
+
+  <!-- 검색 영역 -->
+  <!-- th:action을 통해 검색 처리 컨트롤러 매핑 주소 지정 -->
+  <div class="search-area">
+    <form th:action="@{/newsmain}" method="get" style="display: flex; gap: 10px;">
+      <input type="text" name="keyword" placeholder="내용 검색" th:value="${param.keyword}">
+      <button type="submit">검색</button>
+    </form>
+  </div>
+
+  <!-- 뉴스 목록 테이블 -->
+  <table>
+    <colgroup>
+      <col style="width: 10%;">
+      <col style="width: 45%;">
+      <col style="width: 15%;">
+      <col style="width: 20%;">
+      <col style="width: 10%;">
+    </colgroup>
+    <thead>
+    <tr>
+      <th>번호</th>
+      <th>제목</th>
+      <th>작성자</th>
+      <th>작성일</th>
+      <th>조회수</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- 1. 리스트가 비어있을 경우 출력 (검색 결과 없음) -->
+    <tr class="empty-row" th:if="${newsList == null or #lists.isEmpty(newsList)}">
+      <td colspan="5">검색 결과가 존재하지 않습니다.</td>
+    </tr>
+
+    <!-- 2. 리스트에 데이터가 있을 경우 반복 출력 -->
+    <tr th:unless="${newsList == null or #lists.isEmpty(newsList)}" th:each="news : ${newsList}">
+      <!-- 번호 -->
+      <td th:text="${news.id}">1</td>
+      <!-- 제목 (클릭 시 상세페이지로 이동하도록 링크 처리) -->
+      <td>
+        <a th:href="@{/news/detail(id=${news.id})}" th:text="${news.title}" class="title-link">뉴스 제목 테스트</a>
+      </td>
+      <!-- 작성자 -->
+      <td th:text="${news.writer}">홍길동</td>
+      <!-- 작성일 (LocalDateTime을 yyyy-MM-dd 형식으로 포맷팅) -->
+      <td th:text="${#temporals.format(news.writedate, 'yyyy-MM-dd')}">2023-10-24</td>
+      <!-- 조회수 -->
+      <td th:text="${news.cnt}">0</td>
+    </tr>
+    </tbody>
+  </table>
+
+  <!-- 기존 뉴스 작성 버튼 (수정됨) -->
+  <div class="btn-area">
+    <button type="button" id="btn-show-form" class="btn-write">뉴스 작성</button>
+  </div>
+
+  <!-- 뉴스 입력 폼 영역 (초기에는 숨김) -->
+  <div id="write-form-container" class="write-form-container" style="display: none;">
+    <h3>새 뉴스 작성</h3>
+    <!-- 작성 처리를 담당할 컨트롤러 주소로 th:action 설정 -->
+    <form id="news-form" th:action="@{/news/write}" method="post">
+      <div class="form-group">
+        <label for="title">제목</label>
+        <input type="text" id="title" name="title" required placeholder="제목을 입력하세요">
+      </div>
+
+      <div class="form-group">
+        <label for="writer">작성자</label>
+        <input type="text" id="writer" name="writer" required placeholder="작성자를 입력하세요">
+      </div>
+
+      <div class="form-group">
+        <label for="content">뉴스 내용</label>
+        <textarea id="content" name="content" rows="6" required placeholder="내용을 입력하세요"></textarea>
+      </div>
+
+      <div class="form-btn-area">
+        <!-- submit: 폼 전송 / reset: 폼 초기화 / button: 커스텀 스크립트 실행 -->
+        <button type="submit" class="btn-submit">작성</button>
+        <button type="reset" class="btn-reset">재작성</button>
+        <button type="button" id="btn-cancel" class="btn-cancel">취소</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>
