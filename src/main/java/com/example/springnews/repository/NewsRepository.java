@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface NewsRepository extends JpaRepository<News, Integer> {
   List<News> findByContentContaining(String contentKeyword);
+
+  News findNewsById(int id);
 }
