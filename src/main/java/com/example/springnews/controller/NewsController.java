@@ -18,8 +18,17 @@ public class NewsController {
   NewsRepository newsRepository;
 
   @RequestMapping("/newsmain")
-  public String list(Model model){
-    List<News> list = newsRepository.findAll();
+  public String list(@RequestParam(value = "keyword", required = false) String keyword, Model model){
+    List<News> list;
+
+    if (keyword == null || keyword.trim().isEmpty()) {
+      list = newsRepository.findAll();
+    } else {
+      String searchKeyword = keyword.trim();
+      list = newsRepository.findByContentContaining(searchKeyword);
+      model.addAttribute("keyword", searchKeyword);
+    }
+
     model.addAttribute("newsList", list);
     return "board";
   }
